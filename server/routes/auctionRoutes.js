@@ -7,11 +7,11 @@ import { addAuctionProduct } from "../controllers/addController.js";
 
 const router = express.Router();
 
-router.post("/", authMiddleware, addAuctionProduct);
-router.get("/all",authMiddleware,getAllAuctionProducts);
-router.post("/place-bid",authMiddleware,placeBid);
-router.get("/bid-history/:productId",authMiddleware, getBidHistory);
-router.post("/end",authMiddleware,endAuctionProduct);
+router.post("/auction-products", authMiddleware, addAuctionProduct);
+router.get("/all", authMiddleware, getAllAuctionProducts);
+router.post("/place-bid/:productId", authMiddleware, placeBid);
+router.get("/bid-history/:productId", authMiddleware, getBidHistory);
+router.post("/end/:productId", authMiddleware, endAuctionProduct);
 
 
-export {router as auctionRoutes}
+export { router as auctionRoutes }

@@ -23,7 +23,7 @@ export const loginUser = async (req, res) => {
         res.cookie('jwt', token, {
             httpOnly: true,      // Prevent client-side access
             secure: process.env.NODE_ENV === 'production', // Secure in production
-            sameSite: 'strict',  // Protect against CSRF attacks
+            sameSite: 'none',  // Protect against CSRF attacks
             maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
         });
         //send response
@@ -43,7 +43,7 @@ export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
         console.log("Request Body:", req.body);
-        if(!name || !password || !email){
+        if (!name || !password || !email) {
             return res.status(400).json({ error: "Some Arguments is Missing" });
         }
         // Check if user already exists
@@ -51,15 +51,15 @@ export const registerUser = async (req, res) => {
         if (userExists) {
             return res.status(400).json({ message: "User already exists" });
         }
-        const hashpassword = await bcrypt.hash(password,10);
+        const hashpassword = await bcrypt.hash(password, 10);
         // Create new user
-        const user = await User.create({ name, email, password:hashpassword });
+        const user = await User.create({ name, email, password: hashpassword });
 
         if (user) {
             // Generate JWT token
             const token = generateToken(user._id);
             console.log(token);
-            
+
             // Send response (excluding password)
             res.status(201).json({
                 _id: user._id,

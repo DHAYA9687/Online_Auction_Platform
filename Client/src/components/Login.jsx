@@ -45,11 +45,11 @@ const Login = () => {
     };
 
     return (
-        <Container fluid className="auth-container">
-            <Row className="justify-content-center align-items-center min-vh-100">
+        <Container fluid className="auth-container d-flex align-items-center justify-content-center" style={{ minHeight: "90vh" }}>
+            <Row className="w-100 justify-content-center">
                 <ToastContainer position="top-right" autoClose={3000} />
                 <Col md={8} lg={6} xl={5}>
-                    <Card className="auth-card">
+                    <Card className="auth-card shadow">
                         <Card.Body className="p-5">
                             <div className="text-center mb-4">
                                 <h2 className="text-theme mb-3">

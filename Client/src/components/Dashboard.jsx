@@ -52,7 +52,7 @@ const AuctionDashboard = () => {
         navigate(`/auction/${auctionId}`);
     };
     if (loading) {
-        return <h1>Loading...</h1>
+        return <h1 className="text-white">Loading...</h1>
     }
 
     return (
@@ -111,7 +111,7 @@ const AuctionDashboard = () => {
                                 </div>
                                 <p className="text-secondary mb-3">{auction.description}</p>
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <h5 className="mb-0 text-white">Current Bid: <span className="text-theme">{auction.currentBid}</span></h5>
+                                    <h5 className="mb-0 text-white">Starting Bid : <span className="text-theme">{auction.currentBid}</span></h5>
                                     {auction.auctionEndTime && <small className="text-danger">Ends in: {new Date(auction.auctionEndTime).toLocaleDateString("en-GB", {
                                         day: "2-digit",
                                         month: "2-digit",

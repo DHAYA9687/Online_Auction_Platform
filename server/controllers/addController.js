@@ -9,14 +9,14 @@ export const addAuctionProduct = async (req, res) => {
             return res.status(400).json({ message: "All required fields must be provided." });
         }
 
-         //Get Current Time
-        const currentTime = new Date().toISOString();
+        // Convert string dates to Date objects
+        const currentTime = new Date();
+        auctionEndTime = new Date(auctionEndTime);
+        auctionStartTime = auctionStartTime ? new Date(auctionStartTime) : currentTime;
 
-        if(!auctionStartTime){
-            auctionStartTime = currentTime;
-        }
-       
-        const status = auctionStartTime <= currentTime ? "active" : "Upcoming";
+        // Determine initial status
+        const status = auctionStartTime <= currentTime ? "active" : "upcoming";
+
         // Create new auction product
         const auctionProduct = new AuctionProduct({
             name,
@@ -25,8 +25,9 @@ export const addAuctionProduct = async (req, res) => {
             auctionEndTime,
             auctionStartTime,
             status,
-            seller: req.user_id,  // Assuming req.user is set from authentication middleware
+            seller: req.user_id,
         });
+
         // Save to database
         await auctionProduct.save();
         res.status(201).json({ message: "Auction product added successfully!", auctionProduct });
@@ -68,59 +69,77 @@ export const endAuctionProduct = async (req, res) => {
     }
 };
 
+// Function to check and update upcoming auctions to active
+const checkAuctionStatus = async () => {
+    try {
+        const now = new Date();
+        //console.log("Current time:", now);
+
+        // Find upcoming auctions that should be active now
+        const upcomingAuctions = await AuctionProduct.find({
+            status: "upcoming"
+        });
+
+        for (const auction of upcomingAuctions) {
+            const startTime = new Date(auction.auctionStartTime);
+            console.log(`Auction ${auction._id} start time:`, startTime);
+            
+            if (startTime <= now) {
+                 console.log(`Updating auction ${auction._id} to active`);
+                await AuctionProduct.findByIdAndUpdate(
+                    auction._id,
+                    { status: "active" },
+                    { new: true }
+                );
+            }
+        }
+
+    } catch (error) {
+        console.error("Error in checkAuctionStatus:", error);
+    }
+};
+
 // Function to check and update expired auctions
 export const checkExpiredAuctions = async () => {
     try {
-        console.log("Running checkExpiredAuctions at:", new Date().toLocaleString());
         const now = new Date();
+        console.log("Checking for expired auctions at:", now);
+
+        // Find active auctions that have passed their end time
         const expiredAuctions = await AuctionProduct.find({
-            auctionEndTime: { $lte: now },
             status: "active"
         });
 
-        if (expiredAuctions.length > 0) {
-            for (let auction of expiredAuctions) {
-                auction.status = "completed";
-                await auction.save();
-                console.log(`Auction ${auction._id} ended automatically.`);
+        for (const auction of expiredAuctions) {
+            const endTime = new Date(auction.auctionEndTime);
+            // console.log(`Auction ${auction._id} end time:`, endTime);
+            
+            if (endTime <= now) {
+                //console.log(`Marking auction ${auction._id} as completed`);
+                await AuctionProduct.findByIdAndUpdate(
+                    auction._id,
+                    { status: "completed" },
+                    { new: true }
+                );
             }
         }
+
     } catch (error) {
-        console.error("Error checking expired auctions:", error);
+        console.error("Error in checkExpiredAuctions:", error);
     }
 };
 
-const checkAuctionStatus = async () => {
-    try {
-        const currentTime = new Date().toISOString();
+// Initial check when server starts
+checkExpiredAuctions();
+checkAuctionStatus();
 
-        // Find upcoming auctions whose start time has passed
-        const upcomingAuctions = await AuctionProduct.find({
-            status: "upcoming",
-            auctionStartTime: { $lte: currentTime }
-        });
+// Schedule regular checks every 30 seconds for more frequent updates
+const CHECK_INTERVAL = 30000; // 30 seconds
 
-        if (upcomingAuctions.length > 0) {
-            // Update auctions to active
-            await AuctionProduct.updateMany(
-                { status: "upcoming", auctionStartTime: { $lte: currentTime } },
-                { $set: { status: "active" } }
-            );
-
-            console.log(`Updated ${upcomingAuctions.length} auctions to active.`);
-        }
-    } catch (error) {
-        console.error("Error updating auction status:", error);
-    }
-};
-
-// Run every minute
-setInterval(checkAuctionStatus, 60 * 1000);
-// Run the function every 1 minute
-setInterval(checkExpiredAuctions, 60 * 1000);
-
-
-
+setInterval(() => {
+    checkExpiredAuctions();
+    checkAuctionStatus();
+}, CHECK_INTERVAL);
 
 export const getAllAuctionProducts = async (req, res) => {
     try {

@@ -25,7 +25,7 @@ const auctionProductSchema = new mongoose.Schema({
     },
     auctionStartTime: {
         type: Date,
-        require: true
+        required: true
     },
     seller: {
         type: mongoose.Schema.Types.ObjectId,
@@ -46,7 +46,7 @@ const auctionProductSchema = new mongoose.Schema({
     // },
     status: {
         type: String,
-        enum: ['active', 'completed', 'Upcoming'],
+        enum: ['active', 'completed', 'upcoming'],
         default: 'active'
     },
     // images: [{
@@ -57,5 +57,9 @@ const auctionProductSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+
+// Add these indexes to your schema
+auctionProductSchema.index({ status: 1, auctionStartTime: 1 });
+auctionProductSchema.index({ status: 1, auctionEndTime: 1 });
 
 export const AuctionProduct = mongoose.model('AuctionProduct', auctionProductSchema);

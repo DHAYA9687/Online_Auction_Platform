@@ -2,19 +2,29 @@ import { AuctionProduct } from "../models/auctionProductModel.js";
 
 export const addAuctionProduct = async (req, res) => {
     try {
-        const { name, description, startingPrice, auctionEndTime } = req.body;
+        let { name, description, startingPrice, auctionEndTime, auctionStartTime } = req.body;
 
         // Ensure required fields are present
         if (!name || !description || !startingPrice || !auctionEndTime) {
             return res.status(400).json({ message: "All required fields must be provided." });
         }
 
+         //Get Current Time
+        const currentTime = new Date().toISOString();
+
+        if(!auctionStartTime){
+            auctionStartTime = currentTime;
+        }
+       
+        const status = auctionStartTime <= currentTime ? "active" : "Upcoming";
         // Create new auction product
         const auctionProduct = new AuctionProduct({
             name,
             description,
             startingPrice,
             auctionEndTime,
+            auctionStartTime,
+            status,
             seller: req.user_id,  // Assuming req.user is set from authentication middleware
         });
         // Save to database
@@ -80,8 +90,36 @@ export const checkExpiredAuctions = async () => {
     }
 };
 
+const checkAuctionStatus = async () => {
+    try {
+        const currentTime = new Date().toISOString();
+
+        // Find upcoming auctions whose start time has passed
+        const upcomingAuctions = await AuctionProduct.find({
+            status: "upcoming",
+            auctionStartTime: { $lte: currentTime }
+        });
+
+        if (upcomingAuctions.length > 0) {
+            // Update auctions to active
+            await AuctionProduct.updateMany(
+                { status: "upcoming", auctionStartTime: { $lte: currentTime } },
+                { $set: { status: "active" } }
+            );
+
+            console.log(`Updated ${upcomingAuctions.length} auctions to active.`);
+        }
+    } catch (error) {
+        console.error("Error updating auction status:", error);
+    }
+};
+
+// Run every minute
+setInterval(checkAuctionStatus, 60 * 1000);
 // Run the function every 1 minute
 setInterval(checkExpiredAuctions, 60 * 1000);
+
+
 
 
 export const getAllAuctionProducts = async (req, res) => {
@@ -90,7 +128,7 @@ export const getAllAuctionProducts = async (req, res) => {
             .populate("seller", "name email").
             sort({ createdAt: -1 });
 
-        res.status(200).status({ auctionProduct });
+        res.status(200).json({ auctionProduct });
     } catch (err) {
         return res.status(500).json({ message: "Server error, Please try again later." })
     }

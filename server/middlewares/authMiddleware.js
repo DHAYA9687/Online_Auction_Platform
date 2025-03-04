@@ -2,7 +2,10 @@ import jwt from "jsonwebtoken";
 
 export const authMiddleware = async (req, res, next) => {
     const token = req.cookies.jwt;
+    const twoMinutesLater = new Date(Date.now() + 2 * 60 * 1000).toISOString();
+    console.log(twoMinutesLater);
     if (!token) {
+        console.log("token is missing");
         return res.status(401).json({ message: "Access denied. No token provided." });
 
     }

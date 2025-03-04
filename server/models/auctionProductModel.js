@@ -23,6 +23,10 @@ const auctionProductSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    auctionStartTime: {
+        type: Date,
+        require: true
+    },
     seller: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -42,7 +46,7 @@ const auctionProductSchema = new mongoose.Schema({
     // },
     status: {
         type: String,
-        enum: ['active', 'completed', 'cancelled'],
+        enum: ['active', 'completed', 'Upcoming'],
         default: 'active'
     },
     // images: [{

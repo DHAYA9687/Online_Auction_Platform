@@ -2,19 +2,32 @@ import React, { useState } from "react";
 import { Button, Modal, Form, Row, Col, Card } from "react-bootstrap";
 import { FaGavel, FaRegClock, FaCheckCircle, FaPlus } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
+import axios from "axios";
 
 const AuctionDashboard = () => {
-    const [showModal, setShowModal] = useState(false);
-    const [auctions, setAuctions] = useState([
-        { id: 1, item: "Vintage Watch", bid: "$500", status: "Live", description: "Rare collectible timepiece from 1960s", endTime: "2h 30m" },
-        { id: 2, item: "Classic Car Model", bid: "$1200", status: "Upcoming", description: "Limited edition die-cast model", startTime: "12h 45m" },
-        { id: 3, item: "Painting", bid: "$800", status: "Completed", description: "Original artwork by contemporary artist", winner: "John Doe" },
-        { id: 4, item: "Antique Vase", bid: "$300", status: "Live", description: "Ming dynasty inspired ceramic", endTime: "4h 15m" },
-        { id: 5, item: "Rare Coins", bid: "$2500", status: "Upcoming", description: "Collection of ancient Roman coins", startTime: "24h" },
-        { id: 6, item: "Vintage Camera", bid: "$600", status: "Live", description: "Classic Leica M3 from 1954", endTime: "1h 45m" },
-    ]);
-
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const [showModal, setShowModal] = useState(false);
+    const [auctions, setAuctions] = useState([]);
+    useEffect(() => {
+        const fetchAuctions = async () => {
+            try {
+                const response = await axios.get('http://localhost:4000/api/auction/all', { withCredentials: true });
+                setAuctions(response.data.auctionProduct);
+                console.log(response.data.auctionProduct);
+            } catch (err) {
+                console.error("Error Fectching auctions:", err);
+            } finally {
+                setLoading(false)
+            };
+        };
+
+        fetchAuctions();
+
+    }, []);
+
+
 
     const handleShow = () => setShowModal(true);
     const handleClose = () => setShowModal(false);
@@ -23,7 +36,7 @@ const AuctionDashboard = () => {
         switch (status) {
             case 'Live': return 'bg-danger';
             case 'Upcoming': return 'bg-warning text-dark';
-            default: return 'bg-success';
+            default: return 'bg-success ';
         }
     };
 
@@ -38,6 +51,9 @@ const AuctionDashboard = () => {
     const handleViewDetails = (auctionId) => {
         navigate(`/auction/${auctionId}`);
     };
+    if (loading) {
+        return <h1>Loading...</h1>
+    }
 
     return (
         <div className="container-fluid mt-5 pt-4 px-4 mb-10">
@@ -83,11 +99,11 @@ const AuctionDashboard = () => {
             {/* Auction Cards */}
             <Row className="g-4">
                 {auctions.map((auction) => (
-                    <Col key={auction.id} lg={4} md={6}>
+                    <Col key={auction._id} lg={4} md={6}>
                         <Card className="auction-card h-100">
                             <Card.Body>
                                 <div className="d-flex justify-content-between align-items-start mb-3">
-                                    <h4 className="card-title text-theme mb-0">{auction.item}</h4>
+                                    <h4 className="card-title text-theme mb-0">{auction.name}</h4>
                                     <span className={`badge ${getStatusBadgeClass(auction.status)}`}>
                                         {getStatusIcon(auction.status)}
                                         {auction.status}
@@ -95,24 +111,28 @@ const AuctionDashboard = () => {
                                 </div>
                                 <p className="text-secondary mb-3">{auction.description}</p>
                                 <div className="d-flex justify-content-between align-items-center">
-                                    <h5 className="mb-0 text-white">Current Bid: <span className="text-theme">{auction.bid}</span></h5>
-                                    {auction.endTime && <small className="text-danger">Ends in: {auction.endTime}</small>}
+                                    <h5 className="mb-0 text-white">Current Bid: <span className="text-theme">{auction.currentBid}</span></h5>
+                                    {auction.auctionEndTime && <small className="text-danger">Ends in: {new Date(auction.auctionEndTime).toLocaleDateString("en-GB", {
+                                        day: "2-digit",
+                                        month: "2-digit",
+                                        year: "2-digit",
+                                    })}, {new Date(auction.auctionEndTime).toLocaleTimeString()}</small>}
                                     {auction.startTime && <small className="text-warning">Starts in: {auction.startTime}</small>}
                                     {auction.winner && <small className="text-secondary">Winner: {auction.winner}</small>}
                                 </div>
-                                <div className="mt-3">
+                                { auction.status ==='active'  && <div className="mt-3">
                                     <Button
                                         variant="outline-theme"
                                         size="sm"
                                         className="me-2"
-                                        onClick={() => handleViewDetails(auction.id)}
+                                        onClick={() => handleViewDetails(auction._id)}
                                     >
                                         View Details
                                     </Button>
                                     {/* {auction.status === 'Live' && (
                                         <Button variant="red" size="sm">Place Bid</Button>
                                     )} */}
-                                </div>
+                                </div>}
                             </Card.Body>
                         </Card>
                     </Col>

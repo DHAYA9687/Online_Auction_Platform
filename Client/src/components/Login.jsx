@@ -16,7 +16,7 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try{
+        try {
             if (formData.email === "" || formData.password === "") {
                 toast.error("Please fill in all fields");
                 return;
@@ -24,15 +24,16 @@ const Login = () => {
             const response = await axios.post('http://localhost:4000/api/auth/login', formData, {
                 headers: {
                     "Content-Type": "application/json",
-                }
+                },
+                withCredentials: true,
             }).then((res) => {
                 console.log(res.data.message);
                 toast.success("Logged in successfully");
                 setTimeout(() => navigate("/dashboard"), 2000);
 
             });
-            
-        }catch(err){
+
+        } catch (err) {
             console.error(err);
             toast.error(err.response?.data?.message || "Something went wrong");
         }
@@ -46,7 +47,7 @@ const Login = () => {
     return (
         <Container fluid className="auth-container">
             <Row className="justify-content-center align-items-center min-vh-100">
-            <ToastContainer position="top-right" autoClose={3000} />
+                <ToastContainer position="top-right" autoClose={3000} />
                 <Col md={8} lg={6} xl={5}>
                     <Card className="auth-card">
                         <Card.Body className="p-5">
@@ -111,7 +112,7 @@ const Login = () => {
                                     </Link>
                                 </div>
                             </Form>
-                            
+
                         </Card.Body>
                     </Card>
                 </Col>

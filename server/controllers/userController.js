@@ -22,10 +22,11 @@ export const loginUser = async (req, res) => {
         //set cookie
         res.cookie('jwt', token, {
             httpOnly: true,      // Prevent client-side access
-            secure: process.env.NODE_ENV === 'production', // Secure in production
-            sameSite: 'none',  // Protect against CSRF attacks
+            secure: false, // Secure in production
+            sameSite: 'lax',  // Protect against CSRF attacks
             maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
         });
+        console.log("Set-Cookie Header:", res.getHeaders()["set-cookie"]);
         //send response
         return res.status(200).json({
             _id: user._id,

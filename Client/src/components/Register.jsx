@@ -57,6 +57,7 @@ const Register = () => {
     return (
         <Container fluid className="auth-container">
             <Row className="justify-content-center align-items-center min-vh-100">
+            <ToastContainer position="top-right" autoClose={3000} />
                 <Col md={8} lg={6} xl={5}>
                     <Card className="auth-card">
                         <Card.Body className="p-5">
@@ -137,7 +138,6 @@ const Register = () => {
                                     </Link>
                                 </div>
                             </Form>
-                            <ToastContainer position="top-right" autoClose={3000} />
                         </Card.Body>
                     </Card>
                 </Col>

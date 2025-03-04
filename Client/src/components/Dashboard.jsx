@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, Modal, Form, Row, Col, Card } from "react-bootstrap";
 import { FaGavel, FaRegClock, FaCheckCircle, FaPlus } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const AuctionDashboard = () => {
     const [showModal, setShowModal] = useState(false);
@@ -13,28 +14,34 @@ const AuctionDashboard = () => {
         { id: 6, item: "Vintage Camera", bid: "$600", status: "Live", description: "Classic Leica M3 from 1954", endTime: "1h 45m" },
     ]);
 
+    const navigate = useNavigate();
+
     const handleShow = () => setShowModal(true);
     const handleClose = () => setShowModal(false);
 
     const getStatusBadgeClass = (status) => {
-        switch(status) {
+        switch (status) {
             case 'Live': return 'bg-danger';
             case 'Upcoming': return 'bg-warning text-dark';
-            default: return 'bg-secondary';
+            default: return 'bg-success';
         }
     };
 
     const getStatusIcon = (status) => {
-        switch(status) {
+        switch (status) {
             case 'Live': return <FaGavel className="me-2" />;
             case 'Upcoming': return <FaRegClock className="me-2" />;
             default: return <FaCheckCircle className="me-2" />;
         }
     };
 
+    const handleViewDetails = (auctionId) => {
+        navigate(`/auction/${auctionId}`);
+    };
+
     return (
-        <div className="container-fluid mt-5 pt-4 px-4">
-            <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="container-fluid mt-5 pt-4 px-4 mb-10">
+            <div className="d-flex justify-content-between align-items-center mb-4 mt-4">
                 <h2 className="text-theme">
                     <FaGavel className="me-3" />
                     Dashboard
@@ -46,7 +53,7 @@ const AuctionDashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <Row className="mb-4 g-3">
+            {/* <Row className="mb-4 g-3">
                 <Col md={4}>
                     <Card className="dashboard-card h-100">
                         <Card.Body>
@@ -71,7 +78,7 @@ const AuctionDashboard = () => {
                         </Card.Body>
                     </Card>
                 </Col>
-            </Row>
+            </Row> */}
 
             {/* Auction Cards */}
             <Row className="g-4">
@@ -94,10 +101,17 @@ const AuctionDashboard = () => {
                                     {auction.winner && <small className="text-secondary">Winner: {auction.winner}</small>}
                                 </div>
                                 <div className="mt-3">
-                                    <Button variant="outline-theme" size="sm" className="me-2">View Details</Button>
-                                    {auction.status === 'Live' && (
+                                    <Button
+                                        variant="outline-theme"
+                                        size="sm"
+                                        className="me-2"
+                                        onClick={() => handleViewDetails(auction.id)}
+                                    >
+                                        View Details
+                                    </Button>
+                                    {/* {auction.status === 'Live' && (
                                         <Button variant="red" size="sm">Place Bid</Button>
-                                    )}
+                                    )} */}
                                 </div>
                             </Card.Body>
                         </Card>

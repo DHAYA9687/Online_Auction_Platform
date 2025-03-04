@@ -1,18 +1,46 @@
 import React, { useState } from 'react';
 import { Form, Button, Card, Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { FaUser, FaLock, FaSignInAlt } from 'react-icons/fa';
 
 const Login = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        try{
+            if (formData.email === "" || formData.password === "") {
+                toast.error("Please fill in all fields");
+                return;
+            }
+            const response = await axios.post('http://localhost:4000/api/auth/login', formData, {
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            }).then((res) => {
+                console.log(res.data.message);
+                toast.success("Logged in successfully");
+                setTimeout(() => navigate("/dashboard"), 2000);
+
+            });
+            
+        }catch(err){
+            console.error(err);
+            toast.error(err.response?.data?.message || "Something went wrong");
+        }
         // Handle login logic here
-        console.log(formData);
+        setFormData({
+            email: '',
+            password: ''
+        });
     };
 
     return (
@@ -40,7 +68,7 @@ const Login = () => {
                                             className="form-control text-themes"
                                             placeholder="Email Address"
                                             value={formData.email}
-                                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         />
                                     </div>
                                 </Form.Group>
@@ -54,7 +82,7 @@ const Login = () => {
                                             type="password"
                                             placeholder="Password"
                                             value={formData.password}
-                                            onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         />
                                     </div>
                                 </Form.Group>
@@ -82,6 +110,8 @@ const Login = () => {
                                     </Link>
                                 </div>
                             </Form>
+                            <ToastContainer position="top-right" autoClose={3000} />
+                            
                         </Card.Body>
                     </Card>
                 </Col>

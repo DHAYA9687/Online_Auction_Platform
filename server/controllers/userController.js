@@ -42,7 +42,6 @@ export const loginUser = async (req, res) => {
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        console.log("Request Body:", req.body);
         if (!name || !password || !email) {
             return res.status(400).json({ error: "Some Arguments is Missing" });
         }
@@ -56,10 +55,6 @@ export const registerUser = async (req, res) => {
         const user = await User.create({ name, email, password: hashpassword });
 
         if (user) {
-            // Generate JWT token
-            const token = generateToken(user._id);
-            console.log(token);
-
             // Send response (excluding password)
             res.status(201).json({
                 _id: user._id,

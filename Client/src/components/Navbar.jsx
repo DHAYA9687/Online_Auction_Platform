@@ -29,9 +29,9 @@ const Navbar = () => {
     const navItems = (
         <ul className="navbar-nav w-100">
             <li className="nav-item mb-2">
-                <Link 
-                    className="nav-link d-flex align-items-center" 
-                    to="/auction" 
+                <Link
+                    className="nav-link d-flex align-items-center"
+                    to="/dashboard"
                     onClick={toggleMenu}
                 >
                     <FaTachometerAlt className="me-2" />
@@ -40,21 +40,21 @@ const Navbar = () => {
             </li>
             {user ? (
                 <li className="nav-item mb-2">
-                    <Link 
-                        className="nav-link d-flex align-items-center" 
+                    <Link
+                        className="nav-link d-flex align-items-center"
                         onClick={handleLogout}
                     >
                         <FaUserCircle className="me-2" />
-                        {user.username} 
+                        {user.username}
                         <FaSignInAlt className="ms-2" />
                     </Link>
                 </li>
             ) : (
                 <>
                     <li className="nav-item mb-2">
-                        <Link 
-                            className="nav-link d-flex align-items-center" 
-                            to="/login" 
+                        <Link
+                            className="nav-link d-flex align-items-center"
+                            to="/login"
                             onClick={toggleMenu}
                         >
                             <FaSignInAlt className="me-2" />
@@ -62,9 +62,9 @@ const Navbar = () => {
                         </Link>
                     </li>
                     <li className="nav-item">
-                        <Link 
-                            className="nav-link d-flex align-items-center" 
-                            to="/register" 
+                        <Link
+                            className="nav-link d-flex align-items-center"
+                            to="/register"
                             onClick={toggleMenu}
                         >
                             <FaUserPlus className="me-2" />
@@ -84,16 +84,16 @@ const Navbar = () => {
                     <span className="brand-text">AuctionPro</span>
                 </Link>
                 <div className="d-none d-lg-flex">{navItems}</div>
-                <button 
-                    className="navbar-toggler border-0" 
-                    type="button" 
+                <button
+                    className="navbar-toggler border-0"
+                    type="button"
                     onClick={toggleMenu}
                 >
                     <span className="navbar-toggler-icon"></span>
                 </button>
                 {isOpen && (
                     <div className="position-absolute top-100 start-0 w-100 bg-black shadow-lg rounded-3 mt-2 p-3 d-lg-none mobile-menu"
-                         style={{ border: '1px solid var(--red-primary)' }}>
+                        style={{ border: '1px solid var(--red-primary)' }}>
                         {navItems}
                     </div>
                 )}

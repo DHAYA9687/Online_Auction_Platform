@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 const LandingPage = () => {
     return (
         <div className="d-flex justify-content-center align-items-center vh-100">
-            <div className="text-center bg-black shadow-lg rounded-4 p-5 w-75" 
-                 style={{ border: '2px solid var(--red-primary)' }}>
+            <div className="text-center bg-black shadow-lg rounded-4 p-5 w-75"
+                style={{ border: '2px solid var(--red-primary)' }}>
                 <h1 className="fw-bold text-theme">Welcome to AuctionPro</h1>
                 <p className="text-secondary">
                     Your Premier Platform for Online Auctions and Bidding

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ToastContainer, toast } from "react-toastify";
 import { FaUser, FaLock, FaEnvelope, FaUserPlus, FaPhone } from 'react-icons/fa';
 import axios from 'axios';
+import axiosConfig from '../lib/axios';
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from 'react-router-dom';
 
@@ -28,7 +29,7 @@ const Register = () => {
                 toast.info("Passwords do not match");
                 return;
             }
-            const response = await axios.post('http://localhost:4000/api/auth/register', formData, {
+            const response = await axiosConfig.post('/auth/register', formData, {
                 headers: {
                     "Content-Type": "application/json",
                 }

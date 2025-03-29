@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Form, Button, Card, Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosConfig from '../lib/axios';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaUser, FaLock, FaSignInAlt } from 'react-icons/fa';
@@ -21,18 +21,14 @@ const Login = () => {
                 toast.error("Please fill in all fields");
                 return;
             }
-            const response = await axios.post('http://localhost:4000/api/auth/login', formData, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                withCredentials: true,
-            }).then((res) => {
-                console.log(res.data.message);
-                toast.success("Logged in successfully");
-                setTimeout(() => navigate("/dashboard"), 2000);
-
-            });
-
+            const response = await axiosConfig.post('/auth/login', formData);
+            
+            // Save auth data
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            
+            toast.success("Logged in successfully");
+            setTimeout(() => navigate("/dashboard"), 2000);
         } catch (err) {
             console.error(err);
             toast.error(err.response?.data?.message || "Something went wrong");
@@ -70,6 +66,7 @@ const Login = () => {
                                             className="form-control text-themes"
                                             placeholder="Email Address"
                                             value={formData.email}
+                                            required
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         />
                                     </div>
@@ -83,6 +80,7 @@ const Login = () => {
                                         <Form.Control
                                             type="password"
                                             placeholder="Password"
+                                            required
                                             value={formData.password}
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                         />

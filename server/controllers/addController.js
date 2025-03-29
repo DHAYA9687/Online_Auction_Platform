@@ -12,10 +12,12 @@ export const addAuctionProduct = async (req, res) => {
         // Convert string dates to Date objects
         const currentTime = new Date();
         auctionEndTime = new Date(auctionEndTime);
-        auctionStartTime = auctionStartTime ? new Date(auctionStartTime) : currentTime;
-
+        // auctionStartTime = auctionStartTime ? new Date(auctionStartTime) : currentTime;
+        auctionStartTime = auctionStartTime && !isNaN(new Date(auctionStartTime)) ? new Date(auctionStartTime) : currentTime;
+        console.log("Current Time:", currentTime.toLocaleString());
+        console.log("Auction Start Time:", auctionStartTime.toLocaleString());
         // Determine initial status
-        const status = auctionStartTime <= currentTime ? "active" : "upcoming";
+        const status = auctionStartTime.getTime() <= currentTime.getTime() ? "active" : "upcoming";
 
         // Create new auction product
         const auctionProduct = new AuctionProduct({

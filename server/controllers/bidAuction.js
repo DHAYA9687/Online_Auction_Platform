@@ -13,8 +13,7 @@ export const placeBid = async (req, res) => {
 
         //Search for auction
         let auction = await Auction.findOne({ productId });
-
-
+        
         if (!auction) {
             //Retrieve product from AuctionProduct
             const product = await AuctionProduct.findById(productId);

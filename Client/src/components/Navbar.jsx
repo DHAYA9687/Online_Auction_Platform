@@ -6,56 +6,61 @@ import './Navbar.css';
 const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [user, setUser] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        const userString = localStorage.getItem('user');
-        if (userString) setUser(JSON.parse(userString));
-    }, []);
-
-    useEffect(() => {
-        if (isOpen) setIsOpen(false);
+        // Check authentication status whenever location changes
+        checkAuth();
     }, [location]);
 
+    const checkAuth = () => {
+        const token = localStorage.getItem('token');
+        setIsAuthenticated(!!token);
+    };
+
     const handleLogout = () => {
+        // Clear all auth related data
+        localStorage.removeItem('token');
         localStorage.removeItem('user');
-        setUser(null);
+        setIsAuthenticated(false);
+        // Redirect to home page
         navigate('/');
     };
 
     const toggleMenu = () => setIsOpen(!isOpen);
 
     const navItems = (
-        <ul className="navbar-nav w-100">
-            <li className="nav-item mb-2">
-                <Link
-                    className="nav-link d-flex align-items-center"
-                    to="/dashboard"
-                    onClick={toggleMenu}
-                >
-                    <FaTachometerAlt className="me-2" />
-                    Dashboard
-                </Link>
-            </li>
-            {user ? (
-                <li className="nav-item mb-2">
-                    <Link
-                        className="nav-link d-flex align-items-center"
-                        onClick={handleLogout}
-                    >
-                        <FaUserCircle className="me-2" />
-                        {user.username}
-                        <FaSignInAlt className="ms-2" />
-                    </Link>
-                </li>
-            ) : (
+        <ul className="navbar-nav ms-auto">
+            {isAuthenticated ? (
+                // Show these items when user is logged in
                 <>
-                    <li className="nav-item mb-2">
+                    <li className="nav-item me-3">
+                        <Link
+                            className="nav-link d-flex align-items-center"
+                            to="/dashboard"
+                        >
+                            <FaTachometerAlt className="me-2" />
+                            Dashboard
+                        </Link>
+                    </li>
+                    <li className="nav-item">
+                        <button
+                            className="nav-link d-flex align-items-center border-0 bg-transparent"
+                            onClick={handleLogout}
+                        >
+                            <FaUserCircle className="me-2" />
+                            Logout
+                        </button>
+                    </li>
+                </>
+            ) : (
+                // Show these items when user is not logged in
+                <>
+                    <li className="nav-item me-3">
                         <Link
                             className="nav-link d-flex align-items-center"
                             to="/login"
-                            onClick={toggleMenu}
                         >
                             <FaSignInAlt className="me-2" />
                             Login
@@ -65,7 +70,6 @@ const Navbar = () => {
                         <Link
                             className="nav-link d-flex align-items-center"
                             to="/register"
-                            onClick={toggleMenu}
                         >
                             <FaUserPlus className="me-2" />
                             Register
@@ -78,22 +82,27 @@ const Navbar = () => {
 
     return (
         <nav className="navbar navbar-expand-lg navbar-dark fixed-top m-2">
-            <div className="container-fluid d-flex justify-content-between align-items-center">
+            <div className="container-fluid">
                 <Link className="navbar-brand d-flex align-items-center fw-bold" to="/">
                     <FaGavel className="me-2 brand-icon" />
                     <span className="brand-text">AuctionPro</span>
                 </Link>
+                
+                {/* Desktop menu */}
                 <div className="d-none d-lg-flex">{navItems}</div>
+
+                {/* Mobile menu button */}
                 <button
-                    className="navbar-toggler border-0"
+                    className="navbar-toggler border-0 d-lg-none"
                     type="button"
                     onClick={toggleMenu}
                 >
                     <span className="navbar-toggler-icon"></span>
                 </button>
+
+                {/* Mobile menu */}
                 {isOpen && (
-                    <div className="position-absolute top-100 start-0 w-100 bg-black shadow-lg rounded-3 mt-2 p-3 d-lg-none mobile-menu"
-                        style={{ border: '1px solid var(--red-primary)' }}>
+                    <div className="position-absolute top-100 start-0 w-100 bg-black shadow-lg rounded-3 mt-2 p-3 d-lg-none mobile-menu">
                         {navItems}
                     </div>
                 )}

@@ -2,37 +2,25 @@ import React, { useState } from 'react';
 import { Card, Button, Table, Form, Badge } from 'react-bootstrap';
 import { FaGavel, FaRegClock, FaCheckCircle, FaUser, FaHistory } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
+import useFetch from '../lib/useFetch';
+import axiosConfig from '../lib/axios';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AuctionDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [bidAmount, setBidAmount] = useState('');
 
-    // Mock data - replace with actual API calls
-    const auction = {
-        id: 1,
-        item: "Vintage Watch",
-        currentBid: 500,
-        status: "Live",
-        description: "Rare collectible timepiece from 1960s",
-        endTime: "2h 30m",
-        createdBy: "seller123",
-        images: ["watch1.jpg"],
-        startingBid: 300,
-        endAuction: true
-    };
+    // Fetch auction details and bid history using custom hook
+    const { data, loading, error: auctionerror } = useFetch(`/auction/getauctionById/${id}`);
+    const auction = data?.product || {};
+    console.log(`auction : ${auction.name}`);
 
-    const bidHistory = [
-        { id: 1, bidder: "user456", amount: 500, time: "2024-03-20 14:30" },
-        { id: 2, bidder: "user789", amount: 450, time: "2024-03-20 14:15" },
-        { id: 3, bidder: "user123", amount: 400, time: "2024-03-20 14:00" },
-    ];
-
-    // Mock logged-in user - replace with actual auth
-    const currentUser = {
-        id: 'user123',
-        username: 'user123'
-    };
+    // Fetch bid history using custom hook
+    const { data: bidData, loading: loadingBidHistory, error } = useFetch(`/auction/bid-history/${id}`);
+    const bidHistory = bidData?.bidHistory || [];
+    console.log(`bidHistory : ${bidHistory?.product?.name}`);
 
     const getStatusBadgeClass = (status) => {
         switch (status) {
@@ -50,17 +38,71 @@ const AuctionDetails = () => {
         }
     };
 
-    const handleBidSubmit = (e) => {
+
+    // Calculate the Highest Bid
+    const highestBid = bidHistory.length > 0
+        ? Math.max(...bidHistory.map(bid => Number(bid.bidAmount)))
+        : auction.startingPrice;
+
+
+    const handleBidSubmit = async (e) => {
         e.preventDefault();
-        // Add bid submission logic here
-        alert('Bid placed successfully!');
-        setBidAmount('');
+        const bidValue = Number(bidAmount);
+        if (!bidValue || bidValue <= highestBid) {
+            toast.warning("Bid amount must be greater than the current highest bid!");
+            setBidAmount('');
+            return;
+        }
+        try {
+            const response = await axiosConfig.post(`/auction/place-bid/${id}`, {
+                bidAmount: bidValue,
+            });
+            toast.success("Bid placed successfully!");
+            setBidAmount('');
+            setTimeout(() => {
+                window.location.reload();  // Delay reload to allow toast to show
+            }, 2000);
+        } catch (err) {
+            console.error(err);
+            toast.error("Error placing bid. Please try again.");
+        }
     };
 
-    const handleEndAuction = () => {
+    const handleEndAuction = async () => {
         // Add auction end logic here
-        alert('Auction ended successfully!');
+        if (!window.confirm("Are you sure you want to end this auction?")) return;
+
+        try {
+
+            const response = await axiosConfig.post(`/auction/end/${id}`);
+            const { message, winner } = response.data;
+            toast.success(message);
+            if (winner) {
+                toast.info(`🏆Winner: ${winner.name} (${winner.email})`);
+            } else {
+                toast.info("No bids were placed.");
+            }
+            setTimeout(() => {
+                window.location.reload();  // Delay reload to allow toast to show
+            }, 2000);
+        } catch (err) {
+            console.error(err);
+            toast.error("Error ending auction. Please try again.");
+        }
     };
+
+
+
+    //Get the logged-in user from localStorage
+    const loggedInUser = JSON.parse(localStorage.getItem("user")) || {}; // Get logged-in user
+    const isSeller = loggedInUser?._id && auction?.seller?._id === loggedInUser?._id; // Compare IDs
+    console.log(`loggedInUser : ${loggedInUser?._id}`);
+    console.log(`auction.seller.name : ${auction?.seller?._id}`);
+
+
+    if (loading || loadingBidHistory) return <p className="text-white">Loading...</p>;
+    if (error || auctionerror) return <p className="text-white">Error: {error}</p>;
+    if (!auction || Object.keys(auction).length === 0) return <p className="text-text">No auction found.</p>;
 
     return (
         <div className="container-fluid mt-5 pt-4 px-4">
@@ -71,7 +113,7 @@ const AuctionDetails = () => {
             <Card className="auction-card">
                 <Card.Body>
                     <div className="d-flex justify-content-between align-items-start mb-4">
-                        <h2 className="text-theme">{auction.item}</h2>
+                        <h2 className="text-theme">{auction.name}</h2>
                         <Badge className={`${getStatusBadgeClass(auction.status)} fs-6`}>
                             {getStatusIcon(auction.status)}
                             {auction.status}
@@ -83,7 +125,7 @@ const AuctionDetails = () => {
                             <p className="text-secondary">{auction.description}</p>
                             <div className="d-flex justify-content-between align-items-center mb-4">
                                 <h4 className="mb-0 text-white">
-                                    Highest Bid: <span className="text-theme">${auction.currentBid}</span>
+                                    Highest Bid: <span className="text-theme">${highestBid}</span>
                                 </h4>
                                 {auction.endTime && (
                                     <span className="text-danger">
@@ -96,7 +138,7 @@ const AuctionDetails = () => {
                             {/* Action Buttons Section */}
                             <div className="d-flex align-items-center gap-3">
                                 {/* Place Bid Form */}
-                                {auction.status === 'Live' && (
+                                {auction.status === 'active' && (
                                     <Form onSubmit={handleBidSubmit} className="flex-grow-1">
                                         <div className="d-flex gap-2">
                                             <Form.Control
@@ -114,7 +156,7 @@ const AuctionDetails = () => {
                                 )}
 
                                 {/* End Auction Button */}
-                                {auction.status === 'Live' && (
+                                {auction.status === 'active' && isSeller && (
                                     <Button
                                         variant="danger"
                                         onClick={handleEndAuction}
@@ -134,8 +176,8 @@ const AuctionDetails = () => {
                                         <FaUser className="me-2" />
                                         Auction Details
                                     </h5>
-                                    <p className="mb-2 text-white">Created by : {auction.createdBy}</p>
-                                    <p className="mb-2 text-white">Starting bid : ${auction.startingBid}</p>
+                                    <p className="mb-2 text-white">Created by : {auction.seller.name}</p>
+                                    <p className="mb-2 text-white">Starting bid : ${auction.startingPrice}</p>
                                     <p className="mb-0 text-white">Total bids : {bidHistory.length}</p>
                                 </Card.Body>
                             </Card>
@@ -147,27 +189,57 @@ const AuctionDetails = () => {
                             <FaHistory className="me-2" />
                             Bid History
                         </h4>
-                        <Table striped bordered hover variant="dark">
-                            <thead>
-                                <tr>
-                                    <th>Bidder</th>
-                                    <th>Amount</th>
-                                    <th>Time</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {bidHistory.map((bid) => (
-                                    <tr key={bid.id}>
-                                        <td>{bid.bidder}</td>
-                                        <td>${bid.amount}</td>
-                                        <td>{bid.time}</td>
+                        {bidHistory.length > 0 ? (
+                            <Table striped bordered hover variant="dark">
+                                <thead>
+                                    <tr>
+                                        <th>Bidder Name</th>
+                                        <th>Amount</th>
+                                        <th>Email</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </Table>
+                                </thead>
+                                <tbody>
+                                    {bidHistory.map((bid, index) => (
+                                        <tr key={index}>
+                                            <td>{bid.bidderId.name}</td>
+                                            <td>${bid.bidAmount}</td>
+                                            <td>{bid.bidderId.email}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        ) : (
+                            <p className="text-white">No bids placed yet.</p>
+                        )}
                     </div>
+                    {/* Winner Details Section */}
+                    {auction.status === 'completed' && bidHistory.length > 0 && (
+                        <div className="mt-4">
+                            <h4 className="text-theme mb-3">
+                                🏆 Winner Details
+                            </h4>
+                            <Table striped bordered hover variant="dark">
+                                <thead>
+                                    <tr>
+                                        <th>Winner Name</th>
+                                        <th>Email</th>
+                                        <th>Winning Bid</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>{bidHistory[bidHistory.length - 1].bidderId.name}</td>
+                                        <td>{bidHistory[bidHistory.length - 1].bidderId.email}</td>
+                                        <td>${bidHistory[bidHistory.length - 1].bidAmount}</td>
+                                    </tr>
+                                </tbody>
+                            </Table>
+                        </div>
+                    )}
+
                 </Card.Body>
             </Card>
+            <ToastContainer />
         </div>
     );
 };

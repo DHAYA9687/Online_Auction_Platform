@@ -1,4 +1,5 @@
 import { AuctionProduct } from "../models/auctionProductModel.js";
+import { Auction } from "../models/bitAuction.js";
 
 export const addAuctionProduct = async (req, res) => {
     try {
@@ -60,11 +61,31 @@ export const endAuctionProduct = async (req, res) => {
         if (product.status !== "active") {
             return res.status(400).json({ message: "Auction is already ended or cancelled" });
         }
+
+        const auction = await Auction.findOne({ productId }).populate("bids.bidderId", "name email");
+        console.log(`auction${auction}`);
+
+        if (!auction) {
+            return res.status(400).json({ message: "No bids found for this auction." });
+        }
+
+        //Determine the Winner 
+        let winner = null;
+        if (auction.bids.length > 0) {
+            auction.bids.sort((a, b) => b.bidAmount - a.bidAmount); // Sort by highest bid
+            winner = auction.bids[0].bidderId; // Highest bidder
+        }
+
+
         // Update status to completed
         product.status = "completed";
         await product.save();
 
-        res.json({ message: "Auction ended successfully", product });
+        res.status(200).json({
+            message: "Auction ended successfully", product, winner: winner
+                ? { id: winner._id, name: winner.name, email: winner.email }
+                : null,
+        });
 
     } catch (err) {
         res.status(500).json({ message: "Error updating auction status", error: err.message });
@@ -75,7 +96,6 @@ export const endAuctionProduct = async (req, res) => {
 const checkAuctionStatus = async () => {
     try {
         const now = new Date();
-        //console.log("Current time:", now);
 
         // Find upcoming auctions that should be active now
         const upcomingAuctions = await AuctionProduct.find({
@@ -85,9 +105,9 @@ const checkAuctionStatus = async () => {
         for (const auction of upcomingAuctions) {
             const startTime = new Date(auction.auctionStartTime);
             console.log(`Auction ${auction._id} start time:`, startTime);
-            
+
             if (startTime <= now) {
-                 console.log(`Updating auction ${auction._id} to active`);
+                console.log(`Updating auction ${auction._id} to active`);
                 await AuctionProduct.findByIdAndUpdate(
                     auction._id,
                     { status: "active" },
@@ -105,7 +125,6 @@ const checkAuctionStatus = async () => {
 export const checkExpiredAuctions = async () => {
     try {
         const now = new Date();
-        console.log("Checking for expired auctions at:", now);
 
         // Find active auctions that have passed their end time
         const expiredAuctions = await AuctionProduct.find({
@@ -114,10 +133,7 @@ export const checkExpiredAuctions = async () => {
 
         for (const auction of expiredAuctions) {
             const endTime = new Date(auction.auctionEndTime);
-            // console.log(`Auction ${auction._id} end time:`, endTime);
-            
             if (endTime <= now) {
-                //console.log(`Marking auction ${auction._id} as completed`);
                 await AuctionProduct.findByIdAndUpdate(
                     auction._id,
                     { status: "completed" },
@@ -149,9 +165,36 @@ export const getAllAuctionProducts = async (req, res) => {
             .populate("seller", "name email").
             sort({ createdAt: -1 });
 
+        if (auctionProduct.length === 0) {
+            return res.status(404).json({ message: "No auction products found." });
+        }
+
         res.status(200).json({ auctionProduct });
     } catch (err) {
         return res.status(500).json({ message: "Server error, Please try again later." })
     }
 };
 
+export const getAuctionByID = async (req, res) => {
+    try {
+        const { id: productId } = req.params;
+
+        if (!productId) {
+            return res.status(400).json({
+                message: "Missing Literals"
+            });
+        }
+
+        const product = await AuctionProduct.findById(productId).populate("seller", "name");
+
+        if (!product) {
+            return res.status(400).json({ message: "No auction products found." });
+        }
+
+        return res.status(201).json({ product });
+
+    }
+    catch (err) {
+        return res.status(500).json({ message: "Server error, Please try again later." });
+    }
+};

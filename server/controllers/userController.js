@@ -29,9 +29,11 @@ export const loginUser = async (req, res) => {
         console.log("Set-Cookie Header:", res.getHeaders()["set-cookie"]);
         //send response
         return res.status(200).json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+            },
             token: token
         });
     } catch (error) {

@@ -87,7 +87,7 @@ const Navbar = () => {
                     <FaGavel className="me-2 brand-icon" />
                     <span className="brand-text">AuctionPro</span>
                 </Link>
-                
+
                 {/* Desktop menu */}
                 <div className="d-none d-lg-flex">{navItems}</div>
 

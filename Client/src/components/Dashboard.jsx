@@ -42,7 +42,7 @@ const AuctionDashboard = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         try {
             // Validate form data
             if (!formData.name || !formData.description || !formData.startingPrice || !formData.auctionEndTime) {
@@ -57,12 +57,12 @@ const AuctionDashboard = () => {
             };
 
             const response = await axiosConfig.post('/auction/auction-products', formattedData);
-            
+
             toast.success("Auction successfully created!");
 
             // Close modal and refresh auctions list
             setShowModal(false);
-            
+
             // Reset form
             setFormData({
                 name: "",
@@ -74,7 +74,7 @@ const AuctionDashboard = () => {
 
             // Update auctions list
             setAuctions(prev => [...prev, response.data.auctionProduct]);
-            
+
         } catch (error) {
             console.error("Error creating auction:", error);
             toast.error(error.response?.data?.message || "Failed to create auction.");
@@ -144,7 +144,7 @@ const AuctionDashboard = () => {
                                     </div>
                                     <p className="text-secondary mb-3">{auction.description}</p>
                                     <div className="d-flex justify-content-between align-items-center">
-                                        <h5 className="mb-0 text-white">Starting Bid : <span className="text-theme">{auction.currentBid}</span></h5>
+                                        <h5 className="mb-0 text-white">Starting Bid : <span className="text-theme">{auction.startingPrice}</span></h5>
                                         {auction.auctionEndTime && <small className="text-danger">Ends in: {new Date(auction.auctionEndTime).toLocaleDateString("en-GB", {
                                             day: "2-digit",
                                             month: "2-digit",
@@ -153,7 +153,7 @@ const AuctionDashboard = () => {
                                         {auction.startTime && <small className="text-warning">Starts in: {auction.startTime}</small>}
                                         {auction.winner && <small className="text-secondary">Winner: {auction.winner}</small>}
                                     </div>
-                                    { auction.status ==='active'  && <div className="mt-3">
+                                    <div className="mt-3">
                                         <Button
                                             variant="outline-theme"
                                             size="sm"
@@ -162,7 +162,7 @@ const AuctionDashboard = () => {
                                         >
                                             View Details
                                         </Button>
-                                    </div>}
+                                    </div>
                                 </Card.Body>
                             </Card>
                         </Col>
@@ -183,25 +183,25 @@ const AuctionDashboard = () => {
                             <Col md={6}>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Item Name</Form.Label>
-                                    <Form.Control 
-                                        type="text" 
-                                        placeholder="Enter item name" 
-                                        name="name" 
-                                        value={formData.name} 
-                                        onChange={handleChange} 
-                                        required 
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Enter item name"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        required
                                     />
                                 </Form.Group>
                             </Col>
                             <Col md={6}>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Starting Bid</Form.Label>
-                                    <Form.Control 
-                                        type="number" 
-                                        placeholder="Enter starting bid" 
-                                        name="startingPrice" 
-                                        value={formData.startingPrice} 
-                                        onChange={handleChange} 
+                                    <Form.Control
+                                        type="number"
+                                        placeholder="Enter starting bid"
+                                        name="startingPrice"
+                                        value={formData.startingPrice}
+                                        onChange={handleChange}
                                         required
                                         min="0"
                                     />
@@ -237,6 +237,7 @@ const AuctionDashboard = () => {
                     </Form>
                 </Modal.Body>
             </Modal>
+            <ToastContainer />
         </div>
     );
 };

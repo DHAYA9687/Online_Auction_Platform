@@ -42,8 +42,8 @@ const Register = () => {
                 console.error(err);
                 toast.error(err.response?.data?.message || "Something went wrong");
             });
-                // Handle registration logic here
-                
+            // Handle registration logic here
+
         } catch (err) {
             console.error(err);
             toast.error(err.response?.data?.message || "Something went wrong");

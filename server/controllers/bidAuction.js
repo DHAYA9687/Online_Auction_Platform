@@ -50,19 +50,32 @@ export const getBidHistory = async (req, res) => {
     try {
         const { productId } = req.params;
 
-        const auction = await Auction.findOne({ productId })
+        let auction = await Auction.findOne({ productId })
             .populate("bids.bidderId", "name email")
-            .populate("productId", "name description startingPrice");
+            .populate("productId", "name description startingPrice seller");
 
 
         if (!auction) {
-            return res.status(404).json({ message: "Auction not found" });
+            const product = await AuctionProduct.findById(productId).populate("seller", "username");
+
+            if (!product) {
+                return res.status(404).json({ message: "Auction product not found" });
+            }
+
+            auction = new Auction({
+                productId: product._id,
+                highestBid: product.startingPrice,
+                bids: []
+            });
+
+            await auction.save();
         }
 
         res.status(200).json({
+
             product: auction.productId,
             highestBid: auction.highestBid,
-            bidHistory: auction.bids,
+            bidHistory: (auction.bids || []).sort((a, b) => b.bidAmount - a.bidAmount),
         });
 
     } catch (err) {
